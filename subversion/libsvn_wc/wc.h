@@ -162,11 +162,10 @@ extern "C" {
  * == 1.10.x shipped with format 31
  * == 1.11.x shipped with format 31
  *
- * The bump to 32 is a no-op, used for testing the multi-wc-format branch.
- * Downgrading from format 32 to format 31 is just a matter of running
- * "PRAGMA user_version = 31;".
+ * The bump to 32 adds the pristine-on-demand feature; see the docstring
+ * of STMT_UPGRADE_TO_32 for details.
  *
- * == 1.15.x shipped with format 32
+ * == 1.15.x shipped with format 32 and multi-wc-format support
  *
  * Please document any further format changes here.
  */
@@ -219,6 +218,10 @@ extern "C" {
 /* While we still have this DB version we should verify if there is
    sqlite_stat1 table on opening */
 #define SVN_WC__ENSURE_STAT1_TABLE 31
+
+/* Starting from this version, pristines can be missing and fetched on
+ * demand.  */
+#define SVN_WC__PRISTINES_ON_DEMAND_VERSION 32
 
 /* Return a string indicating the released version (or versions) of
  * Subversion that used WC format number WC_FORMAT, or some other

@@ -116,12 +116,17 @@ def check_formats(sbox, expected_formats):
     raise svntest.Failure("found format '%s'; expected '%s'; in wc '%s'" %
                           (formats, expected_formats, sbox.wc_dir))
 
-
 def check_pristine(sbox, files):
   for file in files:
     file_path = sbox.ospath(file)
     file_text = open(file_path, 'r').read()
-    file_pristine = open(svntest.wc.text_base_path(file_path), 'r').read()
+    try:
+      file_pristine = open(svntest.wc.text_base_path(file_path), 'r').read()
+    except (FileNotFoundError, svntest.Failure): # FileNotFoundError
+      if sbox.pristines_on_demand_enabled(''):
+        # Pristine missing; pristines optional so ignore it
+        continue
+      raise
     if (file_text != file_pristine):
       raise svntest.Failure("pristine mismatch for '%s'" % (file))
 
@@ -140,9 +145,8 @@ def check_dav_cache(dir_path, wc_id, expected_dav_caches):
   minor = sqlite_ver[1]
   patch = sqlite_ver[2]
 
-  if major < 3 or (major == 3 and minor < 6) \
-     or (major == 3 and minor == 6 and patch < 18):
-       return # We need a newer SQLite
+  if major < 3 or (major == 3 and minor < 9):
+    return # We need a newer SQLite
 
   for local_relpath, expected_dav_cache in expected_dav_caches.items():
     # NODES conversion is complete enough that we can use it if it exists
@@ -862,6 +866,10 @@ def delete_in_copy_upgrade(sbox):
                            'b347d1da69df9a6a70433ceeaa0d46c8483e8c03']])
 
 
+# XFAIL when pristines-on-demand enabled: at the revert step the pristines
+# are missing and it can't fetch them as repo no longer exists. See #4891.
+@Issue(4891)
+@XFail(lambda: svntest.main.options.wc_format_version=='1.15')
 def replaced_files(sbox):
   "upgrade with base and working replaced files"
 

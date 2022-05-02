@@ -60,8 +60,8 @@ def run_and_verify_revert(targets, options=[],
   if reverted_paths is None:
     reverted_paths = targets
   expected_output = expected_output_revert(reverted_paths, skipped_paths)
-  svntest.actions.run_and_verify_svn(expected_output, [],
-                                     *(['revert'] + options + targets))
+  svntest.actions.run_and_verify_revert_output(expected_output,
+                                               *(options + targets))
 
 def revert_replacement_with_props(sbox, wc_copy):
   """Helper implementing the core of
@@ -243,6 +243,15 @@ def revert_from_wc_root(sbox):
   svntest.actions.run_and_verify_status('', expected_output)
 
 @Issue(1663)
+# Walking the text-bases automatically repairs timestamps, so now the
+# first and the second reverts in this test behave identically, as if
+# 'svn cleanup' or any other command that repairs the timestamps had been
+# called beforehand.  Judging by the second part of the test, we're fine
+# with revert doing nothing in that case, but that essentially contradicts
+# the expectation in its first part.
+#
+# I temporarily mark the test XFail.  See r1101730 and r1101817 for details.
+@XFail()
 def revert_reexpand_keyword(sbox):
   "revert reexpands manually contracted keyword"
 

@@ -213,6 +213,7 @@ def keywords_off(path):
 ### This test is know to fail when Subversion is built in very deep
 ### directory structures, caused by SVN_KEYWORD_MAX_LEN being defined
 ### as 255.
+@XFail(lambda: svntest.main.options.wc_format_version=='1.15')
 def keywords_from_birth(sbox):
   "commit new files with keywords active from birth"
 
@@ -393,9 +394,16 @@ def keywords_from_birth(sbox):
     '$URL::x%sx$\n' % (' ' * len(url_expand_test_data))
     ]
 
-  fp = open(svntest.wc.text_base_path(fixed_length_keywords_path), 'r')
-  actual_textbase_kw = fp.readlines()
-  fp.close()
+  # Read the text base. In pristines-on-demand mode it isn't stored locally
+  # after commit, so read it from the repo.
+  if sbox.pristines_on_demand_enabled():
+    _, actual_textbase_kw, _ = svntest.main.run_svn(False,
+                                 'cat', '-rHEAD', fixed_length_keywords_path)
+  else:
+    fp = open(svntest.wc.text_base_path(fixed_length_keywords_path), 'r')
+    actual_textbase_kw = fp.readlines()
+    fp.close()
+
   check_keywords(actual_textbase_kw, kw_textbase, "text base")
 
   # Check the Id keyword for filename with spaces.
@@ -597,10 +605,11 @@ def eol_change_is_text_mod(sbox):
     if contents != b"1\r\n2\r\n3\r\n4\r\n5\r\n6\r\n7\r\n8\r\n9\r\n":
       raise svntest.Failure
 
-  foo_base_path = svntest.wc.text_base_path(foo_path)
-  base_contents = open(foo_base_path, 'rb').read()
-  if contents != base_contents:
-    raise svntest.Failure
+  if not sbox.pristines_on_demand_enabled():
+    foo_base_path = svntest.wc.text_base_path(foo_path)
+    base_contents = open(foo_base_path, 'rb').read()
+    if contents != base_contents:
+      raise svntest.Failure
 
 #----------------------------------------------------------------------
 # Regression test for issue #1151.  A single file in a directory

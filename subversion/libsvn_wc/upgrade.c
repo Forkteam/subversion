@@ -1074,7 +1074,7 @@ migrate_text_bases(apr_hash_t **text_bases_info,
 
         /* Insert a row into the pristine table. */
         SVN_ERR(svn_sqlite__get_statement(&stmt, sdb,
-                                          STMT_INSERT_OR_IGNORE_PRISTINE));
+                                          STMT_INSERT_OR_IGNORE_PRISTINE_F31));
         SVN_ERR(svn_sqlite__bind_checksum(stmt, 1, sha1_checksum, iterpool));
         SVN_ERR(svn_sqlite__bind_checksum(stmt, 2, md5_checksum, iterpool));
         SVN_ERR(svn_sqlite__bind_int64(stmt, 3, finfo.size));
